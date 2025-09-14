@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test AI Questionnaire Deployment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test AI Questionnaire Deployment</h1>
+    
+    <div class="test-section">
+        <h2>Configuration</h2>
+        <label>Backend URL (Render):</label><br>
+        <input type="text" id="backendUrl" placeholder="https://your-backend.onrender.com" style="width: 100%; padding: 5px;">
+        <br><br>
+        <small>Example: https://ai-questionnaire-backend.onrender.com</small>
+    </div>
+
+    <div class="test-section">
+        <h2>1. Test Backend Health</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <div id="healthResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test CORS</h2>
+        <button onclick="testCORS()">Test CORS Configuration</button>
+        <div id="corsResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test Questionnaire Generation</h2>
+        <button onclick="testGeneration()">Generate Test Questionnaire</button>
+        <div id="genResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Results Summary</h2>
+        <div id="summary"></div>
+    </div>
+
+    <script>
+        function getBackendUrl() {
+            const url = document.getElementById('backendUrl').value.trim();
+            if (!url) {
+                alert('Please enter your backend URL first!');
+                return null;
+            }
+            // Remove trailing slash if present
+            return url.replace(/\/$/, '');
+        }
+
+        async function testHealth() {
+            const baseUrl = getBackendUrl();
+            if (!baseUrl) return;
+            
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/health`);
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Backend is healthy!</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ Backend returned unexpected status</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Failed to connect to backend</p>
+                    <p>Error: ${error.message}</p>
+                    <p>Make sure:</p>
+                    <ul>
+                        <li>The backend URL is correct</li>
+                        <li>The backend is deployed and running on Render</li>
+                        <li>The /api/health endpoint exists</li>
+                    </ul>
+                `;
+            }
+        }
+
+        async function testCORS() {
+            const baseUrl = getBackendUrl();
+            if (!baseUrl) return;
+            
+            const resultDiv = document.getElementById('corsResult');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ CORS is properly configured!</p>
+                        <p>Frontend can communicate with backend.</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ CORS issue detected</p>
+                        <p>Status: ${response.status}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ CORS error</p>
+                    <p>Error: ${error.message}</p>
+                    <p>Fix: Add your frontend URL to CORS allowedOrigins in backend</p>
+                `;
+            }
+        }
+
+        async function testGeneration() {
+            const baseUrl = getBackendUrl();
+            if (!baseUrl) return;
+            
+            const resultDiv = document.getElementById('genResult');
+            resultDiv.innerHTML = '<p>Testing... (this may take 10-20 seconds)</p>';
+            
+            const testData = {
+                hypothesis: "Evaluate customer satisfaction with online shopping experience",
+                scopingAnswers: {
+                    surveyLength: 10,
+                    targetRespondents: "Online shoppers aged 25-45",
+                    industry: "E-commerce"
+                }
+            };
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/questionnaire/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Questionnaire generation works!</p>
+                        <p>Generated ${data.data.metadata.totalQuestions} questions</p>
+                        <pre>${JSON.stringify(data.data.metadata, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Generation failed</p>
+                        <p>Error: ${data.message || 'Unknown error'}</p>
+                        <p>Possible issues:</p>
+                        <ul>
+                            <li>OPENAI_API_KEY not set in Render environment</li>
+                            <li>Invalid or expired API key</li>
+                            <li>No credits in OpenAI account</li>
+                        </ul>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Failed to generate questionnaire</p>
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        // Auto-fill if URL parameter is present
+        const urlParams = new URLSearchParams(window.location.search);
+        const backendParam = urlParams.get('backend');
+        if (backendParam) {
+            document.getElementById('backendUrl').value = backendParam;
+        }
+    </script>
+</body>
+</html>
