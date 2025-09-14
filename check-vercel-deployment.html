@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Vercel Deployment API</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #10b981;
+            margin-bottom: 20px;
+        }
+        .test-box {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border: 1px solid #444;
+        }
+        .success {
+            color: #10b981;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .info {
+            color: #3b82f6;
+        }
+        .code {
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Vercel Deployment Check</h1>
+        
+        <div class="test-box">
+            <h3>Quick Test</h3>
+            <p>This will check what API URL your Vercel app is configured to use.</p>
+            <button onclick="checkDeployment()">Run Check</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function checkDeployment() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            
+            const vercelUrl = 'https://questionnaire-builder-frontend-m30kpstct-sahil-kamdars-projects.vercel.app';
+            const backendUrl = 'https://questionnaire-builder-backend-dbs1.onrender.com';
+            
+            // Step 1: Check frontend
+            addResult('📱 Checking Frontend...', 'info');
+            try {
+                const response = await fetch(vercelUrl);
+                const html = await response.text();
+                
+                if (response.ok) {
+                    addResult('✅ Frontend is accessible', 'success');
+                    
+                    // Check what's in the HTML
+                    if (html.includes('localhost:5000')) {
+                        addResult('❌ ERROR: Frontend is still using localhost:5000!', 'error');
+                        addResult('The deployment did not pick up the environment variable.', 'error');
+                    } else if (html.includes(backendUrl)) {
+                        addResult('✅ Frontend references the correct backend URL', 'success');
+                    } else {
+                        addResult('⚠️ Could not detect API URL in frontend HTML', 'info');
+                    }
+                    
+                    // Extract any visible configuration
+                    const scriptMatch = html.match(/VITE_API_URL['":\s]+([^'"]+)/);
+                    if (scriptMatch) {
+                        addResult(`Found VITE_API_URL: ${scriptMatch[1]}`, 'info');
+                    }
+                }
+            } catch (error) {
+                addResult(`❌ Frontend check failed: ${error.message}`, 'error');
+            }
+            
+            // Step 2: Test backend directly
+            addResult('\n🖥️ Testing Backend...', 'info');
+            try {
+                const response = await fetch(`${backendUrl}/api/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult('✅ Backend is healthy and responding', 'success');
+                    addResult(`Backend response: ${JSON.stringify(data, null, 2)}`, 'code');
+                }
+            } catch (error) {
+                addResult(`❌ Backend test failed: ${error.message}`, 'error');
+            }
+            
+            // Step 3: Test API call
+            addResult('\n🚀 Testing API Generation...', 'info');
+            try {
+                const testData = {
+                    hypothesis: "I want to understand customer preferences for eco-friendly products",
+                    scopingAnswers: {
+                        surveyLength: 5,
+                        targetRespondents: "Environmentally conscious consumers",
+                        industry: "Retail"
+                    }
+                };
+                
+                const response = await fetch(`${backendUrl}/api/questionnaire/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ API works! Generated questionnaire with ${data.data.sections.length} sections`, 'success');
+                } else {
+                    const error = await response.json();
+                    addResult(`❌ API error: ${JSON.stringify(error)}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ API test failed: ${error.message}`, 'error');
+            }
+            
+            // Final diagnosis
+            addResult('\n📊 DIAGNOSIS:', 'info');
+            addResult(`
+If the frontend is still using localhost, you need to:
+
+1. Check Vercel Dashboard → Settings → Environment Variables
+2. Make sure VITE_API_URL = ${backendUrl}/api
+3. Redeploy from Vercel dashboard
+
+OR
+
+The files we updated might not have been pushed correctly.
+Run these commands:
+  git status
+  git add .
+  git commit -m "Fix API URL for production"
+  git push
+            `, 'code');
+        }
+        
+        function addResult(message, type = '') {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = type === 'code' ? 'code' : `test-box ${type}`;
+            div.textContent = message;
+            resultsDiv.appendChild(div);
+        }
+    </script>
+</body>
+</html>
