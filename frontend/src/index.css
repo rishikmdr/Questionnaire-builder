@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: 37 99 235;
+    --primary-foreground: 255 255 255;
+    --secondary: 243 244 246;
+    --secondary-foreground: 31 41 55;
+    --accent: 99 102 241;
+    --accent-foreground: 255 255 255;
+    --background: 255 255 255;
+    --foreground: 17 24 39;
+    --border: 229 231 235;
+  }
+
+  body {
+    @apply bg-white text-gray-900 antialiased;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-100 text-gray-900 hover:bg-gray-200 active:bg-gray-300;
+  }
+
+  .btn-outline {
+    @apply border border-gray-300 bg-transparent hover:bg-gray-50;
+  }
+
+  .btn-sm {
+    @apply h-9 px-3 text-sm;
+  }
+
+  .btn-md {
+    @apply h-10 px-4 py-2;
+  }
+
+  .btn-lg {
+    @apply h-11 px-8;
+  }
+
+  .input {
+    @apply flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .textarea {
+    @apply flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .card {
+    @apply rounded-lg border border-gray-200 bg-white shadow-sm;
+  }
+
+  .card-header {
+    @apply flex flex-col space-y-1.5 p-6 pb-4;
+  }
+
+  .card-content {
+    @apply p-6 pt-0;
+  }
+
+  .card-footer {
+    @apply flex items-center p-6 pt-0;
+  }
+
+  .label {
+    @apply text-sm font-medium text-gray-700;
+  }
+
+  .question-card {
+    @apply relative p-4 border border-gray-200 rounded-lg bg-white hover:shadow-md transition-shadow;
+  }
+
+  .section-header {
+    @apply text-lg font-semibold text-gray-900 mb-2;
+  }
+}
+
+@layer utilities {
+  .animate-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .animate-out {
+    animation: fadeOut 0.3s ease-in-out;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
