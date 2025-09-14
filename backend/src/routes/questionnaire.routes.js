@@ -14,28 +14,28 @@ import {
 
 const router = express.Router();
 
-// Generate new questionnaire
+// 1️⃣ Generate new questionnaire
 router.post(
   '/generate',
   validateRequest(generateQuestionnaireSchema),
   generateQuestionnaire
 );
 
-// Edit a specific question
+// 2️⃣ Edit a specific question
 router.put(
   '/question/:questionId',
   validateRequest(editQuestionSchema),
   editQuestion
 );
 
-// Validate entire questionnaire
+// 3️⃣ Validate entire questionnaire
 router.post(
   '/validate',
   validateRequest(validateQuestionnaireSchema),
   validateQuestionnaire
 );
 
-// Get questionnaire by ID
+// 4️⃣ Get a questionnaire by ID
 router.get('/:id', getQuestionnaire);
 
 export default router;
