@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 // Determine API base URL based on environment
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD ? 'https://questionnaire-builder-backend-dbs1.onrender.com/api' : 'http://localhost:5000/api');
 
 // Log the API URL for debugging
-if (import.meta.env.DEV) {
-  console.log('API Base URL:', API_BASE_URL);
-}
+console.log('API Base URL:', API_BASE_URL);
+console.log('Environment:', import.meta.env.MODE);
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Vercel API Configuration</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .result {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Check Vercel Frontend API Configuration</h1>
+        
+        <div class="info result">
+This test will:
+1. Check if your Vercel frontend is accessible
+2. Attempt to detect the API URL configuration
+3. Test if the frontend can reach the backend
+        </div>
+
+        <button onclick="runTest()">Run Configuration Check</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function runTest() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            
+            const vercelUrl = 'https://questionnaire-builder-frontend-m30kpstct-sahil-kamdars-projects.vercel.app';
+            const backendUrl = 'https://questionnaire-builder-backend-dbs1.onrender.com';
+            
+            // Step 1: Check if Vercel frontend is accessible
+            addResult('info', '🔄 Checking Vercel frontend accessibility...');
+            try {
+                const frontResponse = await fetch(vercelUrl);
+                const html = await frontResponse.text();
+                
+                if (frontResponse.ok) {
+                    addResult('success', '✅ Vercel frontend is accessible!');
+                    
+                    // Try to detect if it's using the correct API
+                    if (html.includes('localhost:5000')) {
+                        addResult('error', '❌ Frontend might be using localhost API URL!');
+                    } else if (html.includes(backendUrl)) {
+                        addResult('success', '✅ Frontend references the correct backend URL');
+                    }
+                } else {
+                    addResult('error', `❌ Frontend returned status: ${frontResponse.status}`);
+                }
+            } catch (error) {
+                addResult('error', `❌ Cannot access Vercel frontend: ${error.message}`);
+            }
+            
+            // Step 2: Test backend directly
+            addResult('info', '🔄 Testing backend API...');
+            try {
+                const testData = {
+                    hypothesis: "I want to understand customer satisfaction with our online shopping experience and identify areas for improvement",
+                    scopingAnswers: {
+                        surveyLength: 5,
+                        targetRespondents: "Online shoppers aged 25-45",
+                        industry: "E-commerce"
+                    }
+                };
+                
+                const response = await fetch(`${backendUrl}/api/questionnaire/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('success', `✅ Backend API works!\nGenerated questionnaire with ${data.data.sections.length} sections`);
+                } else {
+                    const error = await response.json();
+                    addResult('error', `❌ Backend API error: ${JSON.stringify(error.message)}`);
+                }
+            } catch (error) {
+                addResult('error', `❌ Backend test failed: ${error.message}`);
+            }
+            
+            // Step 3: Provide solution
+            addResult('info', `
+📝 SOLUTION STEPS:
+
+1. Go to Vercel Dashboard > Your Project > Settings > Environment Variables
+2. Add/Update: VITE_API_URL = ${backendUrl}/api
+3. Redeploy your frontend on Vercel
+4. Clear browser cache and try again
+
+If the issue persists, check:
+- Is the backend running on Render?
+- Is the OpenAI API key set in Render environment variables?
+- Are there any deployment errors in Vercel logs?
+            `);
+        }
+        
+        function addResult(type, message) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+    </script>
+</body>
+</html>

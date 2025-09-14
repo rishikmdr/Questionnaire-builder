@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Debug Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .test-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #495057;
+            font-size: 18px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+        button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            border: 1px solid #e2e8f0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffeeba;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-color: #bee5eb;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 AI Questionnaire Builder - Deployment Debug</h1>
+        
+        <!-- Configuration -->
+        <div class="test-section">
+            <div class="test-title">Configuration</div>
+            <input type="text" id="backendUrl" placeholder="Backend URL (e.g., https://your-app.onrender.com)" value="https://questionnaire-builder-backend-dbs1.onrender.com">
+            <input type="text" id="frontendUrl" placeholder="Frontend URL (e.g., https://your-app.vercel.app)" value="https://questionnaire-builder-frontend-m30kpstct-sahil-kamdars-projects.vercel.app">
+        </div>
+
+        <!-- Test 1: Backend Health -->
+        <div class="test-section">
+            <div class="test-title">Test 1: Backend Health Check</div>
+            <button onclick="testBackendHealth()">Test Health Endpoint</button>
+            <div id="healthResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 2: CORS -->
+        <div class="test-section">
+            <div class="test-title">Test 2: CORS Configuration</div>
+            <button onclick="testCORS()">Test CORS</button>
+            <div id="corsResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 3: Generate Questionnaire -->
+        <div class="test-section">
+            <div class="test-title">Test 3: Generate Questionnaire</div>
+            <button onclick="testGenerate()">Test Generation API</button>
+            <div id="generateResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 4: Frontend API Configuration -->
+        <div class="test-section">
+            <div class="test-title">Test 4: Frontend Environment Check</div>
+            <button onclick="checkFrontendConfig()">Check Frontend Config</button>
+            <div id="frontendResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Test 5: Full Integration Test -->
+        <div class="test-section">
+            <div class="test-title">Test 5: Full Integration Test</div>
+            <button onclick="fullIntegrationTest()">Run Full Test</button>
+            <div id="integrationResult" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const getBackendUrl = () => document.getElementById('backendUrl').value;
+        const getFrontendUrl = () => document.getElementById('frontendUrl').value;
+
+        async function testBackendHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = 'Testing backend health...';
+
+            try {
+                const response = await fetch(`${getBackendUrl()}/api/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ Backend is healthy!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ Backend returned error:\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Failed to connect to backend:\n\n${error.message}`;
+            }
+        }
+
+        async function testCORS() {
+            const resultDiv = document.getElementById('corsResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = 'Testing CORS configuration...';
+
+            try {
+                const response = await fetch(`${getBackendUrl()}/api/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Origin': getFrontendUrl()
+                    }
+                });
+
+                const corsHeader = response.headers.get('access-control-allow-origin');
+                const data = await response.json();
+
+                if (corsHeader) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ CORS is properly configured!\n\nAccess-Control-Allow-Origin: ${corsHeader}\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result warning';
+                    resultDiv.innerHTML = `⚠️ CORS header not found in response\n\nThis might cause issues with frontend requests.\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ CORS test failed:\n\n${error.message}`;
+            }
+        }
+
+        async function testGenerate() {
+            const resultDiv = document.getElementById('generateResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = 'Testing questionnaire generation API...';
+
+            const testData = {
+                hypothesis: "I want to understand consumer preferences for sustainable packaging in the food industry",
+                scopingAnswers: {
+                    surveyLength: 10,
+                    targetRespondents: "Consumers aged 25-45 who regularly purchase packaged food products",
+                    industry: "Food and Beverage",
+                    specialInstructions: "Focus on environmental impact awareness"
+                }
+            };
+
+            try {
+                resultDiv.innerHTML = 'Sending request to backend...\n\nRequest body:\n' + JSON.stringify(testData, null, 2);
+                
+                const response = await fetch(`${getBackendUrl()}/api/questionnaire/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ Questionnaire generated successfully!\n\nQuestionnaire ID: ${data.data.id}\nSections: ${data.data.sections.length}\nTotal Questions: ${data.data.metadata.totalQuestions}\n\nFirst section:\n${JSON.stringify(data.data.sections[0], null, 2).substring(0, 500)}...`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ Generation failed:\n\nStatus: ${response.status}\nError: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Request failed:\n\n${error.message}\n\nThis might be a CORS issue or network error.`;
+            }
+        }
+
+        async function checkFrontendConfig() {
+            const resultDiv = document.getElementById('frontendResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = 'Checking frontend configuration...';
+
+            try {
+                // Try to fetch the frontend
+                const response = await fetch(getFrontendUrl());
+                const html = await response.text();
+                
+                // Check if the frontend is loading
+                if (response.ok) {
+                    // Extract any configuration from the HTML if possible
+                    const hasReact = html.includes('root') || html.includes('React');
+                    const hasVite = html.includes('vite') || html.includes('module');
+                    
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ Frontend is accessible!\n\nURL: ${getFrontendUrl()}\nStatus: ${response.status}\nReact App: ${hasReact ? 'Yes' : 'No'}\nVite Build: ${hasVite ? 'Yes' : 'No'}\n\n⚠️ Note: Make sure VITE_API_URL is set to:\n${getBackendUrl()}/api`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ Frontend returned error:\n\nStatus: ${response.status}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Failed to access frontend:\n\n${error.message}`;
+            }
+        }
+
+        async function fullIntegrationTest() {
+            const resultDiv = document.getElementById('integrationResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = 'Running full integration test...\n';
+
+            const results = [];
+
+            // Test 1: Backend Health
+            try {
+                const healthResponse = await fetch(`${getBackendUrl()}/api/health`);
+                if (healthResponse.ok) {
+                    results.push('✅ Backend Health: PASSED');
+                } else {
+                    results.push('❌ Backend Health: FAILED');
+                }
+            } catch (error) {
+                results.push('❌ Backend Health: FAILED - ' + error.message);
+            }
+
+            // Test 2: CORS
+            try {
+                const corsResponse = await fetch(`${getBackendUrl()}/api/health`, {
+                    headers: { 'Origin': getFrontendUrl() }
+                });
+                const corsHeader = corsResponse.headers.get('access-control-allow-origin');
+                if (corsHeader) {
+                    results.push('✅ CORS Configuration: PASSED');
+                } else {
+                    results.push('⚠️ CORS Configuration: WARNING - No CORS header');
+                }
+            } catch (error) {
+                results.push('❌ CORS Configuration: FAILED - ' + error.message);
+            }
+
+            // Test 3: API Generation
+            try {
+                const testData = {
+                    hypothesis: "I want to understand how remote work affects employee productivity and work-life balance in technology companies",
+                    scopingAnswers: {
+                        surveyLength: 5,
+                        targetRespondents: "Technology professionals working remotely",
+                        industry: "Technology"
+                    }
+                };
+                
+                const genResponse = await fetch(`${getBackendUrl()}/api/questionnaire/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                if (genResponse.ok) {
+                    const data = await genResponse.json();
+                    if (data.data && data.data.id) {
+                        results.push('✅ API Generation: PASSED');
+                    } else {
+                        results.push('⚠️ API Generation: PARTIAL - Unexpected response format');
+                    }
+                } else {
+                    const error = await genResponse.json();
+                    results.push('❌ API Generation: FAILED - ' + JSON.stringify(error.message));
+                }
+            } catch (error) {
+                results.push('❌ API Generation: FAILED - ' + error.message);
+            }
+
+            // Test 4: Frontend Accessibility
+            try {
+                const frontResponse = await fetch(getFrontendUrl());
+                if (frontResponse.ok) {
+                    results.push('✅ Frontend Access: PASSED');
+                } else {
+                    results.push('❌ Frontend Access: FAILED - Status ' + frontResponse.status);
+                }
+            } catch (error) {
+                results.push('❌ Frontend Access: FAILED - ' + error.message);
+            }
+
+            // Display results
+            const allPassed = results.every(r => r.includes('✅'));
+            resultDiv.className = allPassed ? 'result success' : results.some(r => r.includes('❌')) ? 'result error' : 'result warning';
+            
+            let summary = allPassed ? '🎉 All tests passed!' : results.some(r => r.includes('❌')) ? '❌ Some tests failed' : '⚠️ Some warnings detected';
+            resultDiv.innerHTML = `${summary}\n\n${results.join('\n')}\n\n📝 Configuration Summary:\n- Backend URL: ${getBackendUrl()}\n- Frontend URL: ${getFrontendUrl()}\n- VITE_API_URL should be: ${getBackendUrl()}/api`;
+        }
+
+        // Auto-run health check on load
+        window.addEventListener('load', () => {
+            setTimeout(testBackendHealth, 500);
+        });
+    </script>
+</body>
+</html>
