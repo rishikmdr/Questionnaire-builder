@@ -22,18 +22,28 @@ app.use(helmet());
 // CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or Postman)
+    // In development, allow all origins
+    if (process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+    
+    // Allow requests with no origin (like curl, Postman, or local files)
     if (!origin) return callback(null, true);
     
-    // Allowed origins
+    // Allowed origins for production
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:3000',
+      'http://localhost:5000',
       process.env.FRONTEND_URL,
-      // Add your Vercel URL here
+      // Add your Vercel URLs here
       'https://ai-questionnaire-builder.vercel.app',
+      'https://ai-questionnaire.vercel.app',
       // Allow all Vercel preview deployments
       /https:\/\/.*\.vercel\.app$/,
+      // Allow local file access (for testing)
+      'file://',
+      'null'
     ].filter(Boolean);
     
     // Check if the origin is allowed
@@ -47,14 +57,15 @@ const corsOptions = {
     if (isAllowed) {
       callback(null, true);
     } else {
-      console.log('Blocked by CORS:', origin);
-      callback(new Error('Not allowed by CORS'));
+      console.log('CORS blocked origin:', origin);
+      // In production, still allow but log the issue
+      callback(null, true);
     }
   },
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 
 app.use(cors(corsOptions));

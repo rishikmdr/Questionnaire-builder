@@ -34,14 +34,36 @@ npm run install:all
 
 3. Set up environment variables:
 
-Create a `.env` file in the `backend` folder:
-```env
-PORT=5000
-NODE_ENV=development
-OPENAI_API_KEY=your_openai_api_key_here
-OPENAI_MODEL=gpt-4-turbo-preview
-FRONTEND_URL=http://localhost:5173
+**⚠️ Important: Never commit API keys to version control!**
+
+#### Option A: Using Environment Variables (Recommended)
+
+**Windows PowerShell:**
+```powershell
+# Run the provided script to set environment variables
+.\set-env.ps1
+# Or set manually:
+$env:OPENAI_API_KEY = "your-api-key-here"
 ```
+
+**Mac/Linux:**
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+#### Option B: Using .env file (Local Development Only)
+
+1. Copy the example file:
+```bash
+cp backend/.env.example backend/.env
+```
+
+2. Edit `backend/.env` and add your OpenAI API key:
+```env
+OPENAI_API_KEY=your_actual_api_key_here
+```
+
+**Note:** The `.env` file is gitignored and will not be committed.
 
 4. Start the development servers:
 ```bash
@@ -126,6 +148,36 @@ ai-questionnaire-builder/
 | `OPENAI_API_KEY` | OpenAI API key | Required |
 | `OPENAI_MODEL` | OpenAI model to use | gpt-4-turbo-preview |
 | `FRONTEND_URL` | Frontend URL for CORS | http://localhost:5173 |
+
+## 🚀 Deployment
+
+### Deploying to Production
+
+When deploying to production, **never hardcode API keys in your code or commit them to GitHub**.
+
+#### Backend (Render/Heroku/Railway)
+
+1. Set environment variables in your hosting platform's dashboard:
+   - `OPENAI_API_KEY`: Your OpenAI API key
+   - `NODE_ENV`: production
+   - `FRONTEND_URL`: Your frontend URL (e.g., https://your-app.vercel.app)
+
+2. Deploy your backend code (API keys will be read from environment variables)
+
+#### Frontend (Vercel/Netlify)
+
+1. Set environment variables:
+   - `VITE_API_URL`: Your backend API URL (e.g., https://your-api.onrender.com)
+
+2. Deploy your frontend code
+
+### Security Best Practices
+
+1. **Never commit `.env` files** with real API keys
+2. **Use environment variables** in production
+3. **Rotate API keys regularly**
+4. **Use different API keys** for development and production
+5. **Monitor API usage** to detect any unauthorized access
 
 ## 🤝 Contributing
 
